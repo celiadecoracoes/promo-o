@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendário de Disponibilidade — Pacote Noite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#0a0e1a;
+    --bg-1:#101627;
+    --pink:#ff2f92;
+    --blue:#2f7bff;
+    --orange:#ff7a2f;
+    --white:#f5f7fb;
+    --muted:#9aa3b8;
+    --alugado:#ff3b5c;
+    --sombra:0 30px 80px -30px rgba(0,0,0,.7);
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  html{scroll-behavior:smooth;}
+
+  body{
+    font-family:'Inter', sans-serif;
+    color:var(--white);
+    background-color:var(--bg-0);
+    min-height:100vh;
+    padding-bottom:110px;
+    overflow-x:hidden;
+  }
+
+  h1,h2,h3,h4{font-family:'Space Grotesk', sans-serif;}
+
+  /* ---------- Background layer (igual ao index.html) ---------- */
+  .bg-tint{
+    position:fixed;
+    inset:0;
+    z-index:-1;
+    background:
+      radial-gradient(circle at 12% 8%, rgba(255,47,146,.30), transparent 45%),
+      radial-gradient(circle at 90% 4%, rgba(255,122,47,.24), transparent 42%),
+      radial-gradient(circle at 50% 100%, rgba(47,123,255,.26), transparent 55%),
+      linear-gradient(180deg, rgba(10,14,26,.94) 0%, rgba(10,14,26,.88) 40%, rgba(10,14,26,.98) 100%);
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    max-width:880px;
+    margin:0 auto;
+    padding:70px 24px 56px;
+    text-align:center;
+  }
+
+  .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:12.5px;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:20px;
+  }
+  .eyebrow .dot{
+    width:7px; height:7px; border-radius:1px;
+    transform:rotate(45deg);
+    background:linear-gradient(135deg, var(--pink), var(--orange));
+    display:inline-block;
+  }
+
+  .hero h1{
+    font-weight:700;
+    font-size:clamp(2rem, 5.5vw, 3.4rem);
+    line-height:1.08;
+    letter-spacing:-0.01em;
+    background:linear-gradient(100deg, var(--pink) 0%, var(--orange) 45%, var(--blue) 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    filter:drop-shadow(0 0 40px rgba(255,47,146,.15));
+  }
+
+  .hero p{
+    margin-top:16px;
+    font-size:clamp(14px, 2vw, 17px);
+    color:var(--muted);
+    max-width:520px;
+    margin-inline:auto;
+  }
+
+  .diamond-divider{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-top:30px;
+  }
+  .diamond-divider span{
+    width:11px; height:11px;
+    transform:rotate(45deg);
+    background:linear-gradient(135deg, var(--pink), var(--blue));
+  }
+  .diamond-divider span:nth-child(2){background:linear-gradient(135deg, var(--orange), var(--pink));}
+  .diamond-divider span:nth-child(3){background:linear-gradient(135deg, var(--blue), var(--orange));}
+
+  .hero .legenda{
+    margin-top:34px;
+    display:flex;
+    gap:14px;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  .legenda-item{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:7px 15px;
+    border-radius:999px;
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.1);
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--white);
+    font-family:'Space Grotesk',sans-serif;
+    letter-spacing:.02em;
+  }
+  .bolinha{
+    width:9px; height:9px; border-radius:50%;
+    display:inline-block;
+  }
+  .bolinha.disp{background:var(--blue); box-shadow:0 0 10px rgba(47,123,255,.7);}
+  .bolinha.alug{background:var(--alugado); box-shadow:0 0 10px rgba(255,59,92,.7);}
+  .bolinha.hoje{background:var(--orange); box-shadow:0 0 10px rgba(255,122,47,.7);}
+
+  /* ---------- GRID DE MESES ---------- */
+  .meses{
+    max-width:1160px;
+    margin:0 auto;
+    padding:0 24px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));
+    gap:22px;
+  }
+
+  .cartao-mes{
+    border-radius:18px;
+    overflow:hidden;
+    background:linear-gradient(160deg, rgba(255,255,255,.045), rgba(255,255,255,.012));
+    border:1px solid rgba(255,255,255,.08);
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    box-shadow:var(--sombra);
+    transition:transform .25s cubic-bezier(.2,.8,.2,1), border-color .25s ease;
+  }
+  .cartao-mes::before{
+    content:"";
+    position:absolute;
+    top:-40%; right:-30%;
+    width:70%; height:140%;
+    background:radial-gradient(circle, rgba(255,122,47,.10), transparent 70%);
+    pointer-events:none;
+  }
+  .cartao-mes:hover{
+    transform:translateY(-4px);
+    border-color:rgba(255,255,255,.16);
+  }
+
+  .cartao-mes .cabecalho{
+    padding:22px 22px 14px;
+    position:relative;
+  }
+  .cartao-mes .cabecalho h2{
+    font-size:1.4rem;
+    font-weight:700;
+    text-transform:capitalize;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .cartao-mes .cabecalho h2::before{
+    content:"";
+    width:10px; height:10px;
+    transform:rotate(45deg);
+    flex-shrink:0;
+  }
+  .tema-rosa .cabecalho h2::before{background:linear-gradient(135deg,var(--pink),var(--orange));}
+  .tema-azul .cabecalho h2::before{background:linear-gradient(135deg,var(--blue),var(--pink));}
+  .tema-laranja .cabecalho h2::before{background:linear-gradient(135deg,var(--orange),var(--blue));}
+
+  .cartao-mes .cabecalho span{
+    font-size:11.5px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--muted);
+    font-family:'Space Grotesk',sans-serif;
+  }
+
+  .grade-semana{
+    display:grid;
+    grid-template-columns:repeat(7, 1fr);
+    padding:14px 16px 4px;
+    gap:4px;
+    position:relative;
+  }
+  .grade-semana span{
+    text-align:center;
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:.06em;
+    color:var(--muted);
+    text-transform:uppercase;
+    font-family:'Space Grotesk',sans-serif;
+  }
+
+  .grade-dias{
+    display:grid;
+    grid-template-columns:repeat(7, 1fr);
+    gap:6px;
+    padding:4px 16px 20px;
+    position:relative;
+  }
+
+  .dia{
+    aspect-ratio:1/1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:9px;
+    font-size:12.5px;
+    font-weight:600;
+    position:relative;
+    cursor:default;
+    color:var(--white);
+    transition:background .15s ease, transform .15s ease, border-color .15s ease;
+  }
+  .dia.vazio{visibility:hidden;}
+
+  .dia.disponivel{
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.06);
+    cursor:pointer;
+  }
+  .tema-rosa .dia.disponivel:hover{background:rgba(255,47,146,.16); border-color:rgba(255,47,146,.35);}
+  .tema-azul .dia.disponivel:hover{background:rgba(47,123,255,.16); border-color:rgba(47,123,255,.35);}
+  .tema-laranja .dia.disponivel:hover{background:rgba(255,122,47,.16); border-color:rgba(255,122,47,.35);}
+  .dia.disponivel:active{transform:scale(.9);}
+
+  .dia.alugado{
+    background:rgba(255,59,92,.14);
+    border:1px solid rgba(255,59,92,.4);
+    color:#ffb2c0;
+    cursor:not-allowed;
+  }
+  .dia.alugado::after{
+    content:"";
+    position:absolute;
+    bottom:4px;
+    width:4px; height:4px;
+    border-radius:50%;
+    background:var(--alugado);
+    box-shadow:0 0 6px var(--alugado);
+  }
+
+  .dia.hoje{
+    outline:1.5px solid var(--orange);
+    outline-offset:-1.5px;
+    box-shadow:0 0 10px rgba(255,122,47,.35);
+  }
+
+  .dia.selecionado{
+    background:linear-gradient(135deg, var(--pink), var(--orange)) !important;
+    border-color:transparent !important;
+    color:#0a0e1a !important;
+    transform:scale(1.08);
+    box-shadow:0 8px 22px rgba(255,47,146,.5);
+    font-weight:700;
+  }
+  .dia.selecionado::before{
+    content:"✓";
+    position:absolute;
+    top:1px;
+    right:3px;
+    font-size:8px;
+  }
+
+  .rodape-mes{
+    padding:0 22px 20px;
+    font-size:11.5px;
+    color:var(--muted);
+    display:flex;
+    justify-content:space-between;
+    border-top:1px solid rgba(255,255,255,.06);
+    padding-top:14px;
+    margin:0 22px 20px;
+    padding-left:0;
+    padding-right:0;
+  }
+
+  /* ---------- BOTÃO WHATSAPP ---------- */
+  .botao-whatsapp{
+    position:fixed;
+    right:22px;
+    bottom:22px;
+    background:linear-gradient(135deg, #25d366, #128c4a);
+    color:#062012;
+    height:58px;
+    padding:0 24px 0 18px;
+    border-radius:999px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    box-shadow:0 20px 50px -20px rgba(37,211,102,.65);
+    border:none;
+    cursor:pointer;
+    z-index:999;
+    font-family:'Space Grotesk', sans-serif;
+    font-size:15px;
+    font-weight:700;
+    transition:transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s ease, background .2s ease;
+  }
+  .botao-whatsapp:hover{
+    transform:translateY(-3px) scale(1.02);
+    box-shadow:0 26px 60px -18px rgba(37,211,102,.75);
+  }
+  .botao-whatsapp svg{width:26px; height:26px; flex-shrink:0;}
+  .botao-whatsapp.sem-selecao{
+    background:linear-gradient(135deg, #4b5568, #333c4d);
+    color:var(--muted);
+    box-shadow:0 14px 34px -16px rgba(0,0,0,.6);
+  }
+  .botao-whatsapp .data-marcador{
+    font-size:11px;
+    font-weight:500;
+    opacity:.85;
+    display:block;
+    text-align:left;
+    font-family:'Inter', sans-serif;
+  }
+  .botao-whatsapp .texto-botao{
+    display:flex;
+    flex-direction:column;
+    line-height:1.15;
+    text-align:left;
+  }
+
+  @keyframes pulsoWhatsapp{
+    0%{ box-shadow:0 20px 50px -20px rgba(37,211,102,.65); }
+    50%{ box-shadow:0 20px 60px -10px rgba(37,211,102,.95); transform:scale(1.06); }
+    100%{ box-shadow:0 20px 50px -20px rgba(37,211,102,.65); }
+  }
+  .botao-whatsapp.pulso{ animation:pulsoWhatsapp .55s ease 2; }
+
+  @media (max-width:480px){
+    .botao-whatsapp{padding:0 18px 0 14px; height:52px; font-size:13px;}
+  }
+
+  /* ---------- CARTÃO RESUMO (aparece ao escolher uma data) ---------- */
+  .cartao-resumo{
+    position:fixed;
+    right:22px;
+    bottom:92px;
+    width:290px;
+    border-radius:18px;
+    background:linear-gradient(165deg, #2b1626, #101627 55%);
+    border:1px solid rgba(255,122,47,.32);
+    box-shadow:0 30px 70px -35px rgba(255,47,146,.4);
+    padding:18px 20px;
+    z-index:998;
+    opacity:0;
+    transform:translateY(14px) scale(.95);
+    pointer-events:none;
+    transition:opacity .28s ease, transform .28s ease;
+    cursor:pointer;
+  }
+  .cartao-resumo.visivel{
+    opacity:1;
+    transform:translateY(0) scale(1);
+    pointer-events:auto;
+  }
+  .cartao-resumo .resumo-tag{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:5px 12px 5px 9px;
+    border-radius:999px;
+    background:linear-gradient(135deg, rgba(255,47,146,.2), rgba(255,122,47,.16));
+    border:1px solid rgba(255,122,47,.4);
+    font-family:'Space Grotesk', sans-serif;
+    font-size:10.5px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:#ffd7c2;
+    margin-bottom:12px;
+  }
+  .cartao-resumo .resumo-tag::before{
+    content:"";
+    width:6px; height:6px; border-radius:50%;
+    background:var(--orange);
+    box-shadow:0 0 8px var(--orange);
+    display:inline-block;
+  }
+  .cartao-resumo h4{
+    font-size:16px;
+    font-weight:700;
+    margin-bottom:3px;
+    color:var(--white);
+  }
+  .cartao-resumo .resumo-data{
+    font-size:12.5px;
+    color:var(--muted);
+    font-weight:500;
+    margin-bottom:14px;
+  }
+  .cartao-resumo .resumo-preco-linha{
+    display:flex;
+    align-items:baseline;
+    gap:9px;
+  }
+  .cartao-resumo .resumo-preco-de{
+    font-size:11.5px;
+    color:var(--muted);
+    text-decoration:line-through;
+    text-decoration-color:rgba(223, 218, 216, 0.6);
+  }
+  .cartao-resumo .resumo-preco-por{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:18px;
+    font-weight:700;
+    background:linear-gradient(100deg, var(--white), #ffd7c2);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .cartao-resumo .resumo-fechar{
+    position:absolute;
+    top:10px;
+    right:12px;
+    background:none;
+    border:none;
+    font-size:15px;
+    color:var(--muted);
+    cursor:pointer;
+    line-height:1;
+  }
+  .cartao-resumo .resumo-fechar:hover{color:var(--white);}
+
+  @media (max-width:480px){
+    .cartao-resumo{ right:14px; left:14px; width:auto; bottom:82px; padding:16px 18px; }
+  }
+
+  @media (max-width:480px){
+    .hero{padding:56px 18px 44px;}
+    .meses{gap:16px;}
+    .dia{font-size:11px;}
+  }
+
+  /* ---------- MODAL: pedir nome do cliente antes do WhatsApp ---------- */
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    z-index:3000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(5,7,13,.8);
+    backdrop-filter:blur(6px);
+    padding:20px;
+    opacity:0;
+    visibility:hidden;
+    transition:opacity .25s ease, visibility 0s linear .25s;
+  }
+  .modal-overlay.ativo{
+    opacity:1;
+    visibility:visible;
+    transition:opacity .25s ease, visibility 0s linear 0s;
+  }
+  .modal-caixa{
+    width:100%;
+    max-width:360px;
+    background:linear-gradient(165deg, #201430, #101627 55%);
+    border:1px solid rgba(255,122,47,.32);
+    border-radius:18px;
+    padding:26px 24px;
+    box-shadow:var(--sombra);
+    transform:translateY(14px) scale(.96);
+    transition:transform .28s cubic-bezier(.2,.8,.2,1);
+  }
+  .modal-overlay.ativo .modal-caixa{transform:translateY(0) scale(1);}
+  .modal-caixa h3{
+    font-size:1.15rem;
+    font-weight:700;
+    margin-bottom:6px;
+  }
+  .modal-caixa p{
+    font-size:13px;
+    color:var(--muted);
+    margin-bottom:18px;
+  }
+  .modal-caixa input{
+    width:100%;
+    padding:13px 15px;
+    border-radius:10px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.14);
+    color:var(--white);
+    font-family:'Inter', sans-serif;
+    font-size:14.5px;
+    outline:none;
+    transition:border-color .2s ease, background .2s ease;
+  }
+  .modal-caixa input::placeholder{color:var(--muted);}
+  .modal-caixa input:focus{
+    border-color:var(--pink);
+    background:rgba(255,255,255,.08);
+  }
+  .modal-caixa .modal-erro{
+    font-size:12px;
+    color:var(--alugado);
+    margin-top:8px;
+    min-height:14px;
+  }
+  .modal-botoes{
+    display:flex;
+    gap:10px;
+    margin-top:20px;
+  }
+  .modal-botoes button{
+    flex:1;
+    border:none;
+    border-radius:10px;
+    padding:12px 14px;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:13.5px;
+    cursor:pointer;
+    transition:transform .18s cubic-bezier(.2,.8,.2,1), filter .18s ease;
+  }
+  .modal-botoes button:active{transform:scale(.96);}
+  .modal-cancelar{
+    background:rgba(255,255,255,.06);
+    color:var(--white);
+    border:1px solid rgba(255,255,255,.12) !important;
+  }
+  .modal-cancelar:hover{background:rgba(255,255,255,.1);}
+  .modal-confirmar{
+    background:linear-gradient(135deg, #25d366, #128c4a);
+    color:#062012;
+  }
+  .modal-confirmar:hover{filter:brightness(1.08);}
+
+  footer{
+    text-align:center;
+    margin-top:70px;
+    font-size:12px;
+    letter-spacing:.05em;
+    color:var(--muted);
+  }
+
+  /* acessibilidade */
+  button:focus-visible{
+    outline:2px solid var(--blue);
+    outline-offset:2px;
+  }
+
+  /* ---------- BOTÃO VOLTAR ---------- */
+  .topo-nav{
+    max-width:880px;
+    margin:0 auto;
+    padding:24px 24px 0;
+  }
+  .btn-voltar{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:9px 18px 9px 14px;
+    border-radius:999px;
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.1);
+    color:var(--white);
+    text-decoration:none;
+    font-family:'Space Grotesk', sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    letter-spacing:.04em;
+    transition:background .2s ease, border-color .2s ease, transform .2s ease;
+  }
+  .btn-voltar svg{
+    width:16px; height:16px;
+    flex-shrink:0;
+    transition:transform .2s ease;
+  }
+  .btn-voltar:hover{
+    background:rgba(255,47,146,.14);
+    border-color:rgba(255,47,146,.4);
+    transform:translateX(-2px);
+  }
+  .btn-voltar:hover svg{transform:translateX(-3px);}
+  .btn-voltar:focus-visible{
+    outline:2px solid var(--blue);
+    outline-offset:2px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="bg-tint"></div>
+
+  <nav class="topo-nav">
+    <a href="./promocao.html" class="btn-voltar" aria-label="Voltar para a tela inicial">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Voltar
+    </a>
+  </nav>
+
+  <section class="hero">
+    <div class="eyebrow"><span class="dot"></span>Pacote Noite</div>
+    <h1>Calendário de Disponibilidade</h1>
+    <p>Confira as datas livres de agosto a dezembro e fale com a gente pelo WhatsApp para reservar a sua noite mágica.</p>
+    <div class="diamond-divider"><span></span><span></span><span></span></div>
+    <div class="legenda">
+      <div class="legenda-item"><span class="bolinha disp"></span> Disponível</div>
+      <div class="legenda-item"><span class="bolinha alug"></span> Alugado</div>
+      <div class="legenda-item"><span class="bolinha hoje"></span> Hoje</div>
+    </div>
+  </section>
+
+  <main class="meses" id="containerMeses"></main>
+
+  <div class="cartao-resumo" id="cartaoResumo">
+    <button class="resumo-fechar" id="fecharResumo" aria-label="Fechar resumo" title="Fechar">✕</button>
+    <span class="resumo-tag" id="resumoTagPacote">Pacote Noite</span>
+    <h4 id="resumoTitulo">Data selecionada</h4>
+    <div class="resumo-data" id="resumoData">—</div>
+    <div class="resumo-preco-linha">
+      <span class="resumo-preco-de" id="resumoPrecoDe"></span>
+      <span class="resumo-preco-por" id="resumoPrecoPor"></span>
+    </div>
+  </div>
+
+  <button class="botao-whatsapp sem-selecao" id="btnWhatsapp" title="Selecione um dia no calendário" aria-label="Reservar dia pelo WhatsApp">
+    <svg viewBox="0 0 32 32" fill="#fff"><path d="M16.001 3C9.373 3 4 8.373 4 15c0 2.386.7 4.607 1.902 6.47L4 29l7.72-1.87A11.94 11.94 0 0 0 16.001 27C22.629 27 28 21.627 28 15S22.629 3 16.001 3zm0 21.8c-1.94 0-3.76-.53-5.32-1.45l-.38-.22-4.58 1.11 1.13-4.47-.25-.39A9.77 9.77 0 0 1 6.2 15c0-5.4 4.4-9.8 9.8-9.8 5.4 0 9.8 4.4 9.8 9.8 0 5.4-4.4 9.8-9.8 9.8zm5.37-7.34c-.29-.15-1.73-.85-2-.95-.27-.1-.46-.15-.66.15-.2.29-.76.95-.93 1.15-.17.2-.34.22-.63.07-.29-.15-1.22-.45-2.32-1.43-.86-.77-1.44-1.71-1.61-2-.17-.29-.02-.45.13-.6.13-.13.29-.34.44-.51.15-.17.2-.29.29-.49.1-.2.05-.37-.02-.51-.07-.15-.66-1.59-.9-2.18-.24-.57-.48-.5-.66-.5-.17 0-.37-.02-.56-.02-.2 0-.51.07-.78.37-.27.29-1.02 1-1.02 2.44s1.05 2.83 1.2 3.02c.15.2 2.07 3.17 5.03 4.44.7.3 1.25.48 1.68.62.7.22 1.34.19 1.85.12.56-.08 1.73-.71 1.98-1.39.24-.68.24-1.27.17-1.39-.07-.12-.27-.2-.56-.34z"/></svg>
+    <span class="texto-botao">
+      <span id="tituloBotao">Reservar dia</span>
+      <span class="data-marcador" id="dataSelecionadaTexto">Escolha uma data</span>
+    </span>
+  </button>
+
+  <footer>Calendário atualizado automaticamente • Ago–Dez 2026</footer>
+
+  <div class="modal-overlay" id="modalNome" role="dialog" aria-modal="true" aria-label="Informe seu nome">
+    <div class="modal-caixa">
+      <h3>Quase lá! ✨</h3>
+      <p>Antes de enviar pelo WhatsApp, nos diga seu nome para personalizarmos o atendimento.</p>
+      <input type="text" id="inputNomeCliente" placeholder="Seu nome completo" autocomplete="name">
+      <div class="modal-erro" id="modalErro"></div>
+      <div class="modal-botoes">
+        <button type="button" class="modal-cancelar" id="modalCancelar">Cancelar</button>
+        <button type="button" class="modal-confirmar" id="modalConfirmar">Enviar no WhatsApp</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* =====================================================================
+   CONFIGURAÇÕES — EDITE APENAS AQUI
+   ===================================================================== */
+const CONFIG = {
+
+  // Número do WhatsApp que vai receber a mensagem.
+  // Formato: código do país + DDD + número, SEM espaços, traços ou "+".
+  // Exemplo Brasil (DDD 85, Fortaleza): "5585999999999"
+  numeroWhatsapp: "5585988376171", // <<< TROQUE PELO SEU NÚMERO
+
+  // Se true, marca automaticamente o PRIMEIRO SÁBADO de cada mês como alugado.
+  marcarPrimeiroSabadoAutomaticamente: false,
+
+  // Marcações manuais de datas específicas.
+  // Use o formato "AAAA-MM-DD": true  -> alugado (vermelho)
+  //                "AAAA-MM-DD": false -> disponível (mesmo que fosse marcado antes)
+  // Adicione quantas linhas quiser, uma por data.
+
+
+
+
+
+
+
+
+
+  marcacoesManuais: {
+
+    //AGOSTO
+    "2026-08-01":true,//Festa Junina
+    "2026-08-08":true,//Abelhinha
+    "2026-08-15":true,//18 Anos
+    "2026-08-16":true,//Sonic
+    "2026-08-23":true,//60 Anos
+    "2026-08-30":true,//Capivara
+
+    //SETEMBRO
+    "2026-09-05":true,//Arca De Noé
+    "2026-09-06":true,//Chá Revelação
+
+    //OUTUBRO
+    "2026-10-03":true,//Branca De Neve
+    "2026-10-18":true,//Princesa // Shirly
+    "2026-10-25":true,//Moana Baby
+
+    //NOVEMBRO
+    "2026-11-01":true,//Safari
+
+    //DEZEMBRO
+    "2026-12-13":true,//Roblox
+
+
+
+    // Exemplos (apague ou edite à vontade):
+    // "2026-08-15": true,
+    // "2026-09-20": true,
+    // "2026-10-05": false,
+  },
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // Informações do Pacote Noite — usadas na mensagem do WhatsApp e no
+  // cartão-resumo que aparece quando o cliente escolhe uma data.
+  // Edite livremente para bater com o que está no seu site.
+  pacote: {
+    nome: "Pacote Noite",
+    slogan: "uma noite mágica, completa e inesquecível",
+    precoOriginal: "R$ 2.000,00",
+    precoPromocional: "R$ 1.700,00",
+    percentualDesconto: "15%",
+    parcelamento: "até 12x no cartão (juros da máquina)",
+    regraReserva: "50% do valor total",
+    destaques: [
+      "Decoração completa + Nome 3D",
+      "Mesas e cadeiras para até 60 pessoas",
+      "Serviço de mesa completo + 50 mimos",
+      "Pipoqueira, algodão doce e cama elástica"
+    ]
+  }
+};
+
+/* =====================================================================
+   NÃO PRECISA MEXER DAQUI PRA BAIXO
+   ===================================================================== */
+
+const MESES = [
+  { nome: "Agosto",   ano: 2026, mes: 7,  tema: "tema-rosa"    },
+  { nome: "Setembro", ano: 2026, mes: 8,  tema: "tema-azul"    },
+  { nome: "Outubro",  ano: 2026, mes: 9,  tema: "tema-laranja" },
+  { nome: "Novembro", ano: 2026, mes: 10, tema: "tema-rosa"    },
+  { nome: "Dezembro", ano: 2026, mes: 11, tema: "tema-azul"    }
+];
+
+const DIAS_SEMANA = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+
+function paraChave(ano, mes, dia){
+  const m = String(mes + 1).padStart(2, "0");
+  const d = String(dia).padStart(2, "0");
+  return `${ano}-${m}-${d}`;
+}
+
+// encontra o primeiro sábado (dia da semana 6) de um mês/ano
+function primeiroSabado(ano, mes){
+  const data = new Date(ano, mes, 1);
+  while (data.getDay() !== 6){
+    data.setDate(data.getDate() + 1);
+  }
+  return data.getDate();
+}
+
+function construirMapaDeStatus(ano, mes){
+  const mapa = {};
+
+  if (CONFIG.marcarPrimeiroSabadoAutomaticamente){
+    const diaSabado = primeiroSabado(ano, mes);
+    mapa[paraChave(ano, mes, diaSabado)] = true;
+  }
+
+  // aplica marcações manuais por cima (têm prioridade)
+  for (const chave in CONFIG.marcacoesManuais){
+    const [a, m] = chave.split("-").map(Number);
+    if (a === ano && (m - 1) === mes){
+      mapa[chave] = CONFIG.marcacoesManuais[chave];
+    }
+  }
+
+  return mapa;
+}
+
+function ehHoje(ano, mes, dia){
+  const hoje = new Date();
+  return hoje.getFullYear() === ano && hoje.getMonth() === mes && hoje.getDate() === dia;
+}
+
+function renderizarMes({ nome, ano, mes, tema }){
+  const primeiroDiaSemana = new Date(ano, mes, 1).getDay(); // 0 = domingo
+  const totalDias = new Date(ano, mes + 1, 0).getDate();
+  const statusMes = construirMapaDeStatus(ano, mes);
+
+  const cartao = document.createElement("div");
+  cartao.className = `cartao-mes ${tema}`;
+
+  const totalAlugados = Object.values(statusMes).filter(v => v === true).length;
+
+  cartao.innerHTML = `
+    <div class="cabecalho">
+      <h2>${nome}</h2>
+      <span>${ano}</span>
+    </div>
+    <div class="grade-semana">
+      ${DIAS_SEMANA.map(d => `<span>${d}</span>`).join("")}
+    </div>
+    <div class="grade-dias"></div>
+    <div class="rodape-mes">
+      <span>${totalDias} dias no mês</span>
+      <span>${totalAlugados} data(s) alugada(s)</span>
+    </div>
+  `;
+
+  const grade = cartao.querySelector(".grade-dias");
+
+  for (let i = 0; i < primeiroDiaSemana; i++){
+    const vazio = document.createElement("div");
+    vazio.className = "dia vazio";
+    grade.appendChild(vazio);
+  }
+
+  for (let dia = 1; dia <= totalDias; dia++){
+    const chave = paraChave(ano, mes, dia);
+    const alugado = statusMes[chave] === true;
+
+    const el = document.createElement("div");
+    el.className = `dia ${alugado ? "alugado" : "disponivel"}`;
+    if (ehHoje(ano, mes, dia)) el.classList.add("hoje");
+    el.textContent = dia;
+    el.title = `${chave} — ${alugado ? "Alugado" : "Disponível"}`;
+
+    if (!alugado){
+      el.dataset.chave = chave;
+      el.addEventListener("click", () => selecionarDia(el, chave));
+    }
+
+    grade.appendChild(el);
+  }
+
+  return cartao;
+}
+
+function montarCalendarios(){
+  const container = document.getElementById("containerMeses");
+  MESES.forEach(m => container.appendChild(renderizarMes(m)));
+}
+
+function formatarDataExtenso(chave){
+  const [ano, mes, dia] = chave.split("-").map(Number);
+  const data = new Date(ano, mes - 1, dia);
+  return data.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+}
+
+function formatarDiaSemana(chave){
+  const [ano, mes, dia] = chave.split("-").map(Number);
+  const data = new Date(ano, mes - 1, dia);
+  const texto = data.toLocaleDateString("pt-BR", { weekday: "long" });
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+// ---- Seleção de dia pelo cliente ----
+let dataSelecionada = null; // guarda a chave "AAAA-MM-DD" do dia clicado
+
+const btnWhatsapp = document.getElementById("btnWhatsapp");
+const tituloBotao = document.getElementById("tituloBotao");
+const dataSelecionadaTexto = document.getElementById("dataSelecionadaTexto");
+
+const cartaoResumo = document.getElementById("cartaoResumo");
+const resumoTagPacote = document.getElementById("resumoTagPacote");
+const resumoTitulo = document.getElementById("resumoTitulo");
+const resumoData = document.getElementById("resumoData");
+const resumoPrecoDe = document.getElementById("resumoPrecoDe");
+const resumoPrecoPor = document.getElementById("resumoPrecoPor");
+const fecharResumo = document.getElementById("fecharResumo");
+
+let resumoFechadoManualmente = false;
+
+function selecionarDia(elementoClicado, chave){
+  // se clicar de novo no mesmo dia, desmarca a seleção
+  const jaEstavaSelecionado = elementoClicado.classList.contains("selecionado");
+
+  // remove seleção de qualquer outro dia (só um dia selecionado por vez)
+  document.querySelectorAll(".dia.selecionado").forEach(el => el.classList.remove("selecionado"));
+
+  if (jaEstavaSelecionado){
+    dataSelecionada = null;
+  } else {
+    elementoClicado.classList.add("selecionado");
+    dataSelecionada = chave;
+    resumoFechadoManualmente = false;
+  }
+
+  atualizarBotaoWhatsapp();
+  atualizarCartaoResumo();
+}
+
+function atualizarBotaoWhatsapp(){
+  if (dataSelecionada){
+    btnWhatsapp.classList.remove("sem-selecao");
+    tituloBotao.textContent = "Confirmar essa data";
+    dataSelecionadaTexto.textContent = formatarDataExtenso(dataSelecionada);
+
+    // pequeno "aceno" no botão pra chamar atenção assim que uma data é escolhida
+    btnWhatsapp.classList.remove("pulso");
+    void btnWhatsapp.offsetWidth; // reinicia a animação mesmo se já tiver rodado
+    btnWhatsapp.classList.add("pulso");
+  } else {
+    btnWhatsapp.classList.add("sem-selecao");
+    tituloBotao.textContent = "Reservar dia";
+    dataSelecionadaTexto.textContent = "Escolha uma data";
+  }
+}
+
+function atualizarCartaoResumo(){
+  const p = CONFIG.pacote;
+
+  if (dataSelecionada && !resumoFechadoManualmente){
+    resumoTagPacote.textContent = p.nome;
+    resumoTitulo.textContent = `${formatarDiaSemana(dataSelecionada)} disponível ✨`;
+    resumoData.textContent = formatarDataExtenso(dataSelecionada);
+    resumoPrecoDe.textContent = `De ${p.precoOriginal}`;
+    resumoPrecoPor.textContent = `por ${p.precoPromocional}`;
+    cartaoResumo.classList.add("visivel");
+  } else {
+    cartaoResumo.classList.remove("visivel");
+  }
+}
+
+fecharResumo.addEventListener("click", () => {
+  resumoFechadoManualmente = true;
+  cartaoResumo.classList.remove("visivel");
+});
+
+// Monta a mensagem completa que vai para o WhatsApp: cumprimento, data
+// escolhida, pergunta sobre disponibilidade e um resumo caprichado do
+// Pacote Noite (destaques + valores + regra de reserva).
+function montarMensagemWhatsapp(chave, nomeCliente){
+  const p = CONFIG.pacote;
+  const dataExtenso = formatarDataExtenso(chave);
+  const diaSemana = formatarDiaSemana(chave);
+  const listaDestaques = p.destaques.map(item => `    ${item}`).join("\n");
+
+  return [
+    `Olá! Meu nome é *${nomeCliente}*. Vim pelo site e me apaixonei pelo *${p.nome}* — ${p.slogan}! `,
+    ``,
+    ` Gostaria de verificar a data de *${dataExtenso}* (${diaSemana}).`,
+    `No calendário de vocês ela aparece como *disponível*, mas queria confirmar antes de garantir a reserva.`,
+    ``,
+    `O que mais me chamou atenção no pacote:`,
+    listaDestaques,
+    ``,
+    ` Vi o valor promocional: de ${p.precoOriginal} por *${p.precoPromocional}* (${p.percentualDesconto} de desconto), parcelado em ${p.parcelamento}.`,
+    ` Entendi que a reserva é feita com ${p.regraReserva} — podem me confirmar essa data e me explicar como seguimos?`,
+    ``,
+    `Fico no aguardo! Muito obrigado(a) `
+  ].join("\n");
+}
+
+// ---- Modal: pede o nome do cliente antes de enviar pelo WhatsApp ----
+const modalNome = document.getElementById("modalNome");
+const inputNomeCliente = document.getElementById("inputNomeCliente");
+const modalErro = document.getElementById("modalErro");
+const modalCancelar = document.getElementById("modalCancelar");
+const modalConfirmar = document.getElementById("modalConfirmar");
+
+let nomeClienteSalvo = ""; // lembra o nome já digitado durante a sessão, pra não pedir de novo à toa
+
+function abrirModalNome(){
+  modalErro.textContent = "";
+  inputNomeCliente.value = nomeClienteSalvo;
+  modalNome.classList.add("ativo");
+  setTimeout(() => inputNomeCliente.focus(), 50);
+}
+
+function fecharModalNome(){
+  modalNome.classList.remove("ativo");
+}
+
+function confirmarEnvioWhatsapp(){
+  const nome = inputNomeCliente.value.trim();
+
+  if (!nome){
+    modalErro.textContent = "Por favor, digite seu nome para continuar.";
+    inputNomeCliente.focus();
+    return;
+  }
+
+  nomeClienteSalvo = nome;
+  fecharModalNome();
+
+  const mensagem = montarMensagemWhatsapp(dataSelecionada, nome);
+  const url = `https://wa.me/${CONFIG.numeroWhatsapp}?text=${encodeURIComponent(mensagem)}`;
+  window.open(url, "_blank");
+}
+
+modalConfirmar.addEventListener("click", confirmarEnvioWhatsapp);
+modalCancelar.addEventListener("click", fecharModalNome);
+
+modalNome.addEventListener("click", (e) => {
+  if (e.target === modalNome) fecharModalNome();
+});
+
+inputNomeCliente.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") confirmarEnvioWhatsapp();
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && modalNome.classList.contains("ativo")) fecharModalNome();
+});
+
+// Botão "Reservar dia": só abre o modal se houver uma data selecionada no calendário
+btnWhatsapp.addEventListener("click", () => {
+  if (!dataSelecionada){
+    alert("Selecione primeiro um dia disponível no calendário.");
+    return;
+  }
+
+  abrirModalNome();
+});
+
+// Clicar no cartão-resumo também dispara a mesma reserva pelo WhatsApp
+cartaoResumo.addEventListener("click", (evento) => {
+  if (evento.target === fecharResumo) return;
+  btnWhatsapp.click();
+});
+
+montarCalendarios();
+
+// ---- Botão físico/gesto de voltar do celular = botão "Voltar" da página ----
+(function(){
+  var destinoVoltar = "./promocao.html";
+  history.pushState({ guardaVoltar: true }, "", location.href);
+  window.addEventListener("popstate", function(){
+    window.location.href = destinoVoltar;
+  });
+})();
+</script>
+
+</body>
+</html>
